@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { logIfTesting } from "../utils";
+import { logIfTesting, readExample, readInput } from "../utils";
 
 function partOne(s: string): number {
   const lines = s.split("\n").map((s) => s.trim().split(""));
@@ -59,15 +59,15 @@ function partTwo(s: string): number {
 
 if (Bun.env.NODE_ENV === "test") {
   test("day 3 example", async () => {
-    const example = (await Bun.file("./src/day3/example.txt").text()).trim();
+    const example = await readExample();
     expect(partOne(example)).toBe(357);
   });
   test("day 3 pt. 2 example", async () => {
-    const example = (await Bun.file("./src/day3/example.txt").text()).trim();
+    const example = await readExample();
     expect(partTwo(example)).toBe(3121910778619);
   });
 } else {
-  const input = (await Bun.file("./src/day3/input.txt").text()).trim();
+  const input = await readInput();
   console.log(partOne(input));
   console.log(partTwo(input));
 }
