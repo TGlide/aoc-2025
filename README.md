@@ -1,5 +1,7 @@
 # aoc-2025
 
+Advent of Code 2025 solutions
+
 To install dependencies:
 
 ```bash
@@ -9,7 +11,6 @@ bun install
 To run:
 
 ```bash
-bun run index.ts
+# Change day1 to the day of choice
+bun run ./src/day1/main.ts
 ```
-
-This project was created using `bun init` in bun v1.3.3. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
