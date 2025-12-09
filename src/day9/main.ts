@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
-import {
-  colors,
+import { logIfTesting } from "@/utils/testing.js";
+import { readExample, readInput } from "@/utils/file-io.js";
   combinations,
   logIfTesting,
   logMatrix,
@@ -10,7 +10,8 @@ import {
   traverseMatrix,
   unique,
   type MultiArray,
-} from "../utils";
+} from "@/utils/testing.js"
+import { readExample, readInput } from "@/utils/file-io.js";
 
 type Coord = MultiArray<number, 2>;
 

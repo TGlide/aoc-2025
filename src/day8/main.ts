@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
-import { logIfTesting, readExample, readInput } from "../utils";
+import { logIfTesting } from "@/utils/testing.js";
+import { readExample, readInput } from "@/utils/file-io.js";
 
 type Coord = { x: number; y: number; z: number };
 

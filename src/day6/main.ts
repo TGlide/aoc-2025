@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
-import { invertMatrix, logIfTesting, readExample, readInput } from "../utils";
+import { logIfTesting } from "@/utils/testing.js";
+import { readExample, readInput } from "@/utils/file-io.js";
 
 function partOne(s: string): number {
 	let matrix = s.split('\n').map(line => line.trim().split(/\s+/g))
