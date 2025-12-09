@@ -8,6 +8,7 @@ import {
   readExample,
   readInput,
   traverseMatrix,
+  unique,
   type MultiArray,
 } from "../utils";
 
@@ -55,6 +56,13 @@ function partTwo(s: string): number {
     number,
   ][];
 
+  // compact coords
+  // const rows = unique(coords.map((c) => c[0])).toSorted((a, b) => a - b);
+  // const cols = unique(coords.map((c) => c[1])).toSorted((a, b) => a - b);
+  // coords.forEach((coord, i) => {
+  //   coords[i] = [rows.indexOf(coord[0]!) + 1, cols.indexOf(coord[1]!) + 1];
+  // });
+
   const [w, h] = coords.reduce(
     (acc, c) => {
       acc.forEach((_, i) => {
@@ -68,14 +76,15 @@ function partTwo(s: string): number {
 
   // lets do this the hard way. cool for visualizing.
   console.log("building matrix with sizes", w, h);
+  console.log("...fuck thats big\n");
   const matrix = new Array(h + 1)
     .fill(0)
-    .map((_) => new Array(w + 1).fill(".")) as string[][];
+    .map((_) => new Array(w + 1).fill("-")) as string[][];
   logMatrix(matrix);
   console.log();
 
+  // make walls
   coords.forEach((c1, i) => {
-    console.log("yo");
     const c2 = coords[(i + 1) % coords.length]!;
     matrix[c1[1]]![c1[0]] = "#";
     matrix[c2[1]]![c2[0]] = "#";
@@ -84,6 +93,7 @@ function partTwo(s: string): number {
   logMatrix(matrix);
   console.log();
 
+  // fill it in
   matrix.forEach((line, row) => {
     const b = line.findIndex((item) => "#X".includes(item));
     const end = line.findLastIndex((item) => "#X".includes(item));
@@ -92,6 +102,8 @@ function partTwo(s: string): number {
   });
   logMatrix(matrix);
   console.log();
+
+  return 0;
 
   return combinations(coords, 2).reduce((acc, [c1, c2]) => {
     const allCoords = [c1, c2, [c1[0], c2[1]], [c2[0], c1[1]]] as Coord[];
@@ -129,11 +141,11 @@ function partTwo(s: string): number {
 if (Bun.env.NODE_ENV === "test") {
   test("example", async () => {
     const example = await readExample();
-    expect(partOne(example)).toBe(50);
+    expect(partOne(example)).toBe(256);
   });
   test("pt. 2 example", async () => {
     const example = await readExample();
-    expect(partTwo(example)).toBe(24);
+    expect(partTwo(example)).toBe(35);
   });
 } else {
   const input = await readInput();
