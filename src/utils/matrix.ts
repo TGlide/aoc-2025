@@ -234,3 +234,31 @@ export function* traverseMatrixGenerator<T>(matrix: T[][]) {
     }
   }
 }
+
+export function invertMatrix<T>(matrix: T[][]): T[][] {
+  let res: T[][] = [];
+  for (let row = 0; row < matrix.length; row++) {
+    for (let col = 0; col < matrix[row]!.length; col++) {
+      if (!res[col]) res[col] = [];
+      res[col]![row] = matrix[row]![col]!;
+    }
+  }
+
+  return res;
+}
+
+// Backward compatibility function for simple transform-based logging
+export function simpleLogMatrix<T>(
+  matrix: T[][],
+  transform?: (args: { char: T; row: number; col: number }) => string,
+) {
+  matrix.forEach((line, row) => {
+    const output = line
+      .map((char, col) => {
+        if (!transform) return char;
+        return transform({ char, row, col });
+      })
+      .join("");
+    console.log(output);
+  });
+}

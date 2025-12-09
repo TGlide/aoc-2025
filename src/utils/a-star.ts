@@ -71,15 +71,15 @@ export class AStar<Extra = {}> {
     let left = 0;
     let right = this.queue.length;
 
-    const nodeScore = this.scoreMap[getNodeKey(node)];
+    const nodeScore = this.scoreMap[getNodeKey(node)]!;
     const nodeDistToEnd = distance(node.pos, this.args.end.pos);
     const nodeFScore = nodeScore + nodeDistToEnd;
 
     while (left < right) {
       const mid = Math.floor((left + right) / 2);
-      const midKey = getNodeKey(this.queue[mid]);
-      const midPos = this.queue[mid].pos;
-      const midScore = this.scoreMap[midKey];
+      const midKey = getNodeKey(this.queue[mid]!);
+      const midPos = this.queue[mid]!.pos;
+      const midScore = this.scoreMap[midKey]!;
       const midDistToEnd = distance(midPos, this.args.end.pos);
       const midFScore = midScore + midDistToEnd;
 

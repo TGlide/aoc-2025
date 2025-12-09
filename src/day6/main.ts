@@ -1,17 +1,18 @@
 import { expect, test } from "bun:test";
 import { logIfTesting } from "@/utils/testing.js";
 import { readExample, readInput } from "@/utils/file-io.js";
+import { invertMatrix } from "@/utils/matrix.js";
 
 function partOne(s: string): number {
 	let matrix = s.split('\n').map(line => line.trim().split(/\s+/g))
 	let operations = invertMatrix(matrix)
 
 	let res = 0;
-	operations.forEach(line => {
+	operations.forEach((line: string[]) => {
 		const op = line.at(-1)
 		res += line
 			.slice(0, line.length - 1)
-			.reduce((acc, curr) => {
+			.reduce((acc: number, curr: string) => {
 				if (op === '*') return acc * Number(curr)
 				else if (op === '+') return acc + Number(curr)
 				return acc

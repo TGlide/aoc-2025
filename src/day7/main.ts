@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test";
-import { logIfTesting } from "@/utils/testing.js";
+import { logIfTesting, TESTING } from "@/utils/testing.js";
 import { readExample, readInput } from "@/utils/file-io.js";
+import { simpleLogMatrix } from "@/utils/matrix.js";
+import { colors, mark } from "@/utils/colors.js";
 
 function partOne(s: string): number {
 	const matrix = s.split('\n').map(l => l.split(''))
@@ -19,7 +21,7 @@ function partOne(s: string): number {
 
 		})
 	})
-	if (TESTING) logMatrix(matrix)
+	if (TESTING) simpleLogMatrix(matrix)
 	return res
 }
 
@@ -66,10 +68,10 @@ function partTwo(s: string): number {
 			if (!isNum(curr)) return acc
 			return acc + Number(curr)
 		}, 0)
-		if (TESTING) logMatrix(matrix)
+		if (TESTING) simpleLogMatrix(matrix)
 		logIfTesting(res, '\n')
 	})
-	if (TESTING) logMatrix(matrix)
+	if (TESTING) simpleLogMatrix(matrix)
 	return res
 }
 

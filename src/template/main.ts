@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { readExample, readInput } from "../utils";
+import { readExample, readInput } from "@/utils/file-io.js";
 
 function partOne(s: string): number {
   return 0;

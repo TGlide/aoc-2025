@@ -1,17 +1,10 @@
 import { expect, test } from "bun:test";
 import { logIfTesting } from "@/utils/testing.js";
 import { readExample, readInput } from "@/utils/file-io.js";
-  combinations,
-  logIfTesting,
-  logMatrix,
-  mark,
-  readExample,
-  readInput,
-  traverseMatrix,
-  unique,
-  type MultiArray,
-} from "@/utils/testing.js"
-import { readExample, readInput } from "@/utils/file-io.js";
+import { combinations, unique } from "@/utils/array.js";
+import { simpleLogMatrix, traverseMatrix } from "@/utils/matrix.js";
+import { colors, mark } from "@/utils/colors.js";
+import type { MultiArray } from "@/utils/array.js";
 
 type Coord = MultiArray<number, 2>;
 
@@ -81,7 +74,7 @@ function partTwo(s: string): number {
   const matrix = new Array(h + 1)
     .fill(0)
     .map((_) => new Array(w + 1).fill("-")) as string[][];
-  logMatrix(matrix);
+  simpleLogMatrix(matrix);
   console.log();
 
   // make walls
@@ -91,7 +84,7 @@ function partTwo(s: string): number {
     matrix[c2[1]]![c2[0]] = "#";
     between(c1, c2).forEach((c) => (matrix[c[1]]![c[0]] = "X"));
   });
-  logMatrix(matrix);
+  simpleLogMatrix(matrix);
   console.log();
 
   // fill it in
@@ -101,7 +94,7 @@ function partTwo(s: string): number {
     if (b === -1 || end === -1) return;
     between([b, row], [end, row]).forEach((c) => (matrix[c[1]]![c[0]] = "X"));
   });
-  logMatrix(matrix);
+  simpleLogMatrix(matrix);
   console.log();
 
   return 0;
@@ -117,7 +110,7 @@ function partTwo(s: string): number {
     console.log("c2:", c2);
     console.log("All coords:", allCoords.join("; "));
     console.log("Area:", a);
-    logMatrix(matrix, ({ row, col, char }) => {
+    simpleLogMatrix(matrix, ({ row, col, char }) => {
       if (allCoords.some((c) => c[0] === col && c[1] === row)) {
         return mark("O", valid ? colors.green : colors.red);
       }

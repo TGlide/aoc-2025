@@ -1,14 +1,8 @@
 import { expect, test } from "bun:test";
-import { logIfTesting } from "@/utils/testing.js";
+import { logIfTesting, TESTING } from "@/utils/testing.js";
 import { readExample, readInput } from "@/utils/file-io.js";
-  logIfTesting,
-  logMatrix,
-  mark,
-  readExample,
-  readInput,
-  TESTING,
-} from "@/utils/testing.js"
-import { readExample, readInput } from "@/utils/file-io.js";
+import { simpleLogMatrix } from "@/utils/matrix.js";
+import { colors, mark } from "@/utils/colors.js";
 
 const TP = "@";
 
@@ -34,7 +28,7 @@ function partOne(s: string): number {
       if (adj.length < 4) acc++;
       if (!TESTING) return;
 
-      logMatrix(lines, (args) => {
+      simpleLogMatrix(lines, (args) => {
         if (args.row === row && args.col === col) {
           return mark(args.char, colors.green);
         }
@@ -61,7 +55,7 @@ function partTwo(s: string): number {
   do {
     // remove
     if (TESTING) {
-      logMatrix(lines, (args) => {
+      simpleLogMatrix(lines, (args) => {
         if (to_remove.find((a) => a.row === args.row && a.col === args.col)) {
           return mark(args.char, colors.bgRed);
         }
@@ -75,7 +69,7 @@ function partTwo(s: string): number {
     });
 
     if (TESTING) {
-      logMatrix(lines, (args) => {
+      simpleLogMatrix(lines, (args) => {
         if (to_remove.find((a) => a.row === args.row && a.col === args.col)) {
           return mark(args.char, colors.bgGreen);
         }
@@ -108,7 +102,7 @@ function partTwo(s: string): number {
         }
         if (!TESTING) return;
 
-        // logMatrix(lines, (args) => {
+        // simpleLogMatrix(lines, (args) => {
         //   if (args.row === row && args.col === col) {
         //     return mark(args.char, colors.green);
         //   }
