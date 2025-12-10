@@ -38,3 +38,4 @@ export const colors = {
 export function mark(str: string, color: ValueOf<typeof colors>) {
   return `${color}${str}${colors.reset}`;
 }
+
