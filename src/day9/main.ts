@@ -5,8 +5,8 @@ import { combinations, unique } from "@/utils/array.js";
 import { simpleLogMatrix, traverseMatrix } from "@/utils/matrix.js";
 import { colors, mark } from "@/utils/colors.js";
 import type { MultiArray } from "@/utils/array.js";
-
-type Coord = MultiArray<number, 2>;
+import { getAdjacent, getAdjacentInMatrix } from "@/utils/position";
+import { getNeighbors, getNeighborsInMatrix, type Coord } from "@/utils/coords";
 
 function area(c1: Coord, c2: Coord) {
   const w = Math.abs(c1[0] - c2[0]) + 1;
@@ -42,6 +42,22 @@ function between(c1: Coord, c2: Coord): Coord[] {
       return n as unknown as Coord;
     }),
   ];
+}
+
+// returns all the coords of a rectangle
+function rect(c1: Coord, c2: Coord): Coord[] {
+  const minRow = Math.min(c1[0], c2[0]);
+  const maxRow = Math.max(c1[0], c2[0]);
+  const minCol = Math.min(c1[1], c2[1]);
+  const maxCol = Math.max(c1[1], c2[1]);
+
+  let res: Coord[] = [];
+  for (let row = minRow; row <= maxRow; row++) {
+    for (let col = minCol; col <= maxCol; col++) {
+      res.push([row, col]);
+    }
+  }
+  return res;
 }
 
 function partTwo(s: string): number {
@@ -87,20 +103,28 @@ function partTwo(s: string): number {
   simpleLogMatrix(matrix);
   console.log();
 
-  // fill it in
-  matrix.forEach((line, row) => {
-    const b = line.findIndex((item) => "#X".includes(item));
-    const end = line.findLastIndex((item) => "#X".includes(item));
-    if (b === -1 || end === -1) return;
-    between([b, row], [end, row]).forEach((c) => (matrix[c[1]]![c[0]] = "X"));
+  // fill outside
+  let queue = [[0, 0]] as Coord[];
+  while (queue.length) {
+    const next = queue.shift()!;
+    const [row, col] = next;
+    matrix[row][col] = ".";
+
+    const toPush = getNeighbors(next).filter(([row, col]) => {
+      return matrix[row]?.[col] === "-";
+    });
+    queue.push(...toPush);
+  }
+  traverseMatrix(matrix, ({ row, col, item }) => {
+    if (item !== "-") return;
+    matrix[row][col] = "X";
   });
+
   simpleLogMatrix(matrix);
   console.log();
 
-  return 0;
-
   return combinations(coords, 2).reduce((acc, [c1, c2]) => {
-    const allCoords = [c1, c2, [c1[0], c2[1]], [c2[0], c1[1]]] as Coord[];
+    const allCoords = rect(c1, c2);
     const valid = allCoords.every(([col, row]) => {
       return matrix[row]![col] !== ".";
     });
@@ -112,7 +136,10 @@ function partTwo(s: string): number {
     console.log("Area:", a);
     simpleLogMatrix(matrix, ({ row, col, char }) => {
       if (allCoords.some((c) => c[0] === col && c[1] === row)) {
-        return mark("O", valid ? colors.green : colors.red);
+        return mark(
+          "O",
+          valid ? colors.green : char === "." ? colors.bgRed : colors.red,
+        );
       }
       return char;
     });
@@ -139,7 +166,7 @@ if (Bun.env.NODE_ENV === "test") {
   });
   test("pt. 2 example", async () => {
     const example = await readExample();
-    expect(partTwo(example)).toBe(35);
+    expect(partTwo(example)).toBe(66);
   });
 } else {
   const input = await readInput();
