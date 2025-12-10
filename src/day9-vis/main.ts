@@ -5,7 +5,8 @@ import { combinations, unique } from "@/utils/array.js";
 import { simpleLogMatrix, traverseMatrix } from "@/utils/matrix.js";
 import { colors, mark } from "@/utils/colors.js";
 import { getNeighbors, type Coord } from "@/utils/coords";
-import { TUI, waitForKeypress } from "@/utils/tui";
+import { waitForKeypress } from "@/utils/tui";
+import { MatrixRenderer, type RGB } from "@/utils/terminal-image";
 
 function area(c1: Coord, c2: Coord) {
   const w = Math.abs(c1[0] - c2[0]) + 1;
@@ -179,69 +180,78 @@ async function partTwo(s: string): Promise<number> {
   }
 
   // Sort by area descending - check biggest first, prune more
-  pairs.sort((a, b) => b.maxArea - a.maxArea);
+  // pairs.sort((a, b) => b.maxArea - a.maxArea);
 
-  // Use TUI for smooth visualization
-  const tui = new TUI<string>({
-    title: "Day 9 - Rectangle Search",
-    throttleMs: 40,
-    showFps: true,
-  }).init();
+  // Colors for visualization
+  const COLORS = {
+    outside: [20, 20, 25] as RGB,
+    wall: [255, 180, 50] as RGB,
+    inside: [50, 50, 50] as RGB,
+    highlight: [80, 155, 80] as RGB,
+    highlightInvalid: [255, 80, 80] as RGB,
+    highlightInvalidOutside: [180, 50, 50] as RGB,
+    best: [50, 200, 100] as RGB,
+  };
 
-  // Shared state for the transform function (updated by computation, read by renderer)
+  // Shared state for the renderer
   const highlightSet = new Set<string>();
   const bestCoordsSet = new Set<string>();
   let currentValid = false;
   let best = 0;
-
-  // Create transform function ONCE - reads from shared state
-  const transform = ({
-    item,
-    row,
-    col,
-  }: {
-    item: string;
-    row: number;
-    col: number;
-  }) => {
-    const key = `${row},${col}`;
-
-    // Highlight best found so far (O(1) Set lookup)
-    if (bestCoordsSet.has(key)) {
-      return { content: "O", color: colors.bgGreen };
-    }
-
-    // Current selection (O(1) Set lookup)
-    if (highlightSet.has(key)) {
-      const color = currentValid
-        ? colors.green
-        : item === "."
-          ? colors.bgRed
-          : colors.red;
-      return { content: "O", color };
-    }
-
-    // Default coloring for matrix cells
-    if (item === "#") return { content: "#", color: colors.yellow };
-    if (item === "X") return { content: "X", color: colors.cyan };
-    if (item === ".") return { content: ".", color: colors.brightBlack };
-    return item;
-  };
-
-  tui.setMatrix(matrix, transform);
-
   let skipped = 0;
 
-  // Main computation loop - renders only when throttle allows
+  // Color function for the matrix
+  const getColor = (item: string, row: number, col: number): RGB => {
+    const key = `${row},${col}`;
+
+    // Best found so far
+    if (bestCoordsSet.has(key)) {
+      return COLORS.best;
+    }
+
+    // Current selection
+    if (highlightSet.has(key)) {
+      if (currentValid) return COLORS.highlight;
+      return item === "."
+        ? COLORS.highlightInvalidOutside
+        : COLORS.highlightInvalid;
+    }
+
+    // Default colors
+    if (item === "#") return COLORS.wall;
+    if (item === "X") return COLORS.inside;
+    if (item === ".") return COLORS.outside;
+    return [60, 60, 70];
+  };
+
+  // Create persistent renderer (no flashing!)
+  const renderer = new MatrixRenderer<string>({
+    cellSize: 3,
+    getColor,
+  });
+
+  // Throttle rendering
+  let lastRender = 0;
+  const throttleMs = 60;
+
+  // Setup screen
+  process.stdout.write("\x1b[?25l"); // Hide cursor
+  process.stdout.write("\x1b[2J\x1b[H"); // Clear screen, move home
+
+  // Reserve lines for status
+  console.log(); // Line 1: status
+  console.log(); // Line 2: progress
+  console.log(); // Line 3: blank
+
+  // Main computation loop
   for (let i = 0; i < pairs.length; i++) {
     const { r1, r2, maxArea } = pairs[i];
 
-    // Early termination: if best area >= this pair's max possible area, skip rest
-    // (pairs are sorted by maxArea descending)
-    if (maxArea <= best) {
-      skipped = pairs.length - i;
-      break;
-    }
+    // Early termination
+    // if (maxArea <= best) {
+    //   skipped = pairs.length - i;
+    //   break;
+    // }
 
     // Calculate bounds directly
     const minCol = Math.min(r1.r[0], r2.r[0]);
@@ -249,28 +259,17 @@ async function partTwo(s: string): Promise<number> {
     const minRow = Math.min(r1.r[1], r2.r[1]);
     const maxRow = Math.max(r1.r[1], r2.r[1]);
 
-    // Fast validity check with early exit
+    // Fast validity check
     const valid = isValidRect(minCol, maxCol, minRow, maxRow);
 
-    // Update shared state for TUI
+    // Update shared state
     highlightSet.clear();
     for (let col = minCol; col <= maxCol; col++) {
       for (let row = minRow; row <= maxRow; row++) {
         highlightSet.add(`${row},${col}`);
       }
     }
-
     currentValid = valid;
-
-    // Update TUI state and request render (throttled)
-    tui
-      .setStatus(
-        `Checking: [${r1.c}] -> [${r2.c}]  Area: ${maxArea}  ${mark(valid ? "VALID" : "INVALID", valid ? colors.green : colors.red)}`,
-        `Best: ${best} | Skipped: ${skipped}`,
-      )
-      .setProgress(i + 1, pairs.length)
-      .invalidateMatrix()
-      .requestRender();
 
     if (valid && maxArea > best) {
       best = maxArea;
@@ -281,19 +280,43 @@ async function partTwo(s: string): Promise<number> {
         }
       }
     }
+
+    // Throttled render
+    const now = Date.now();
+    if (now - lastRender >= throttleMs) {
+      // Update status lines (move to line 1, clear, print)
+      process.stdout.write("\x1b[1;1H\x1b[2K");
+      const statusColor = valid ? colors.green : colors.red;
+      const validText = valid ? "VALID" : "INVALID";
+      process.stdout.write(`Area: ${maxArea}  ${mark(validText, statusColor)}`);
+
+      process.stdout.write("\x1b[2;1H\x1b[2K");
+      process.stdout.write(
+        `Best: ${best} | Progress: ${(((i + 1) * 100) / pairs.length).toFixed(2)}% ${i + 1}/${pairs.length}`,
+      );
+
+      // Move to line 4 for image
+      process.stdout.write("\x1b[4;1H");
+
+      // Render matrix as image (updates in place)
+      renderer.render(matrix);
+
+      lastRender = now;
+    }
   }
 
-  tui
-    .setStatus(
-      `Complete! Best area: ${best}`,
-      `Checked: ${pairs.length - skipped}/${pairs.length} | Press any key...`,
-    )
-    .setProgress(pairs.length, pairs.length)
-    .render();
+  // Final render
+  process.stdout.write("\x1b[1;1H\x1b[2K");
+  process.stdout.write(mark(`Complete! Best area: ${best}`, colors.green));
+  process.stdout.write("\x1b[2;1H\x1b[2K");
+  process.stdout.write(`Checked: ${pairs.length - skipped}/${pairs.length}`);
+  process.stdout.write("\x1b[4;1H");
+  renderer.render(matrix);
 
-  // Wait for keypress before cleanup so user can see result
+  // Show cursor
+  process.stdout.write("\x1b[?25h");
+
   if (TESTING) await waitForKeypress();
-  tui.cleanup();
 
   return best;
 }
