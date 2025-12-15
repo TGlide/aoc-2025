@@ -23,3 +23,7 @@ export async function readExample(): Promise<string> {
   return (await Bun.file(`${dir}/example.txt`).text()).trim();
 }
 
+export async function readTxt(name: string): Promise<string> {
+  const dir = getCallerDir();
+  return (await Bun.file(`${dir}/${name}.txt`).text()).trim();
+}
