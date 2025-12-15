@@ -3,8 +3,6 @@ import { readExample, readInput, readTxt } from "@/utils/file-io.js";
 import { logIfTesting } from "@/utils/testing";
 import { memoize } from "@/utils/memo";
 
-const SEP = ">";
-
 function partOne(s: string): number {
   const devices = s.split("\n").reduce(
     (acc, line) => {
@@ -14,18 +12,15 @@ function partOne(s: string): number {
     {} as Record<string, string[]>,
   );
 
-  const findPathsToOut = memoize((node: string): string[] => {
-    if (node === "out") return [node];
+  const findPathsToOut = memoize((node: string): number => {
+    if (node === "out") return 1;
     const outputs = devices[node];
-    return outputs.reduce((acc, o) => {
-      const res = findPathsToOut(o);
-      res.forEach((r) => acc.push(node + SEP + r));
-      return acc;
-    }, [] as string[]);
-  });
-  const paths = findPathsToOut("you");
 
-  return paths.length;
+    return outputs.reduce((acc, o) => {
+      return acc + findPathsToOut(o);
+    }, 0);
+  });
+  return findPathsToOut("you");
 }
 
 function partTwo(s: string): number {
@@ -37,20 +32,23 @@ function partTwo(s: string): number {
     {} as Record<string, string[]>,
   );
 
-  const findPathsToOut = memoize((node: string): string[] => {
-    if (node === "out") return [node];
-    const outputs = devices[node];
-    return outputs.reduce((acc, o) => {
-      const res = findPathsToOut(o);
-      res.forEach((r) => acc.push(node + SEP + r));
-      return acc;
-    }, [] as string[]);
-  });
-  const paths = findPathsToOut("svr").filter(
-    (p) => p.includes("dac") && p.includes("fft"),
-  );
+  const findPathsToOut = memoize(
+    (node: string, found: { dac: boolean; fft: boolean }): number => {
+      if (node === "out") return found.dac && found.fft ? 1 : 0;
+      const outputs = devices[node];
 
-  return paths.length;
+      return outputs.reduce((acc, o) => {
+        return (
+          acc +
+          findPathsToOut(o, {
+            dac: found.dac || node === "dac",
+            fft: found.fft || node === "fft",
+          })
+        );
+      }, 0);
+    },
+  );
+  return findPathsToOut("svr", { dac: false, fft: false });
 }
 
 if (Bun.env.NODE_ENV === "test") {
